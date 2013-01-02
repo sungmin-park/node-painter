@@ -1,0 +1,12 @@
+{
+  "name": "painter"
+  , "description": "Simple canvas wrapper for browser and canvas-node"
+  , "version": "0.0.1"
+  , "repository": {
+    "type": "git"
+    , "url":  "git://github.com/vamf12/painter.git"
+  }
+  , "dependencies": {
+    "coffee-script": "*"
+  }
+}
