@@ -78,7 +78,6 @@ class Painter
     if fit is 'shrink'
       fontSize = Math.min height, fontSize
       if not wordWrap
-        #TODO binary search로 변경
         fontSize = findFontSizeInLine(
           ctx, width, text, fontWeight, fontSize, fontFace
         )
@@ -104,6 +103,7 @@ class Painter
     ctx
 
 findFontSizeInLine = (ctx, width, text, weight, size, face, ratio=10) ->
+  #TODO binary search로 변경
    _.find([size*ratio..0], (size) ->
       ctx.setFont weight, size / ratio, face
       ctx.measureText(text).width < width
@@ -119,26 +119,43 @@ wordWrap = (ctx, width, lineCount, words) ->
     if ctx.measureText(words).width > width
       return null
 
-  for i in [words.length...0]
-    if ctx.measureText(line = words[0...i]).width < width
-      lines = wordWrap ctx, width, lineCount - 1, words[i..-1]
-      if lines?
-        lines.unshift line
-        return lines
+  upper = words.length - 1
+  lower = 0
+  maxinumLine = null
+  while lower <= upper
+    i = Math.floor (upper + lower) / 2
+    if ctx.measureText(line = words[0..i]).width < width
+      maxinumLine = line
+      lower = i + 1
+      continue
+    upper = i - 1
 
+  if maxinumLine?
+    lines = wordWrap ctx, width, lineCount - 1, words[maxinumLine.length..-1]
+    if lines?
+      lines.unshift maxinumLine
+      return lines
   # cannot find any solution
   return null
 
 findFontSize = (ctx, width, height, text, weight, size, face, ratio=10) ->
   words = text.split(' ')
-  for i in [size*ratio..0]
-    i /= ratio
-    maximumLineCount = Math.floor height/(i*1.1)
-    ctx.setFont weight, i, face
+  upper = size * ratio
+  lower = 0
+  maximumSize = [0, []]
+  while lower <= upper
+    bound = Math.floor (upper + lower) / 2
+    fontSize = bound / ratio
+    maximumLineCount = Math.floor height/(fontSize*1.1)
+    ctx.setFont weight, fontSize, face
     lines = wordWrap ctx, width, maximumLineCount, words
     if lines?
-      return [i, _.map lines, (line) -> line.join ' ']
-  [0, []]
+      maximumSize = [fontSize, _.map lines, (line) -> line.join ' ']
+      lower = bound + 1
+    else
+      upper = bound - 1
+
+  maximumSize
 
 
 
